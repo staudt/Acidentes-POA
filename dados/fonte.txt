@@ -1,1 +1,3 @@
 http://www.datapoa.com.br/dataset/acidentes-de-transito
+
+Arquivos comprimidos com zlib por questões de armazenamento. Para ler o conteúdo, rode o script "descompress_files.py"
