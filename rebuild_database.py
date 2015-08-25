@@ -20,7 +20,7 @@ if __name__ == "__main__":
                 first_line_of_file = True
                 headers = ''
                 data = []
-                for row in content.split('\n'):
+                for row in content.split("\r\n"):
                     if first_line_of_file:
                         headers = row.split(';')
                         
@@ -28,6 +28,7 @@ if __name__ == "__main__":
                     else:
                         row_data = row.split(';')
                         if len(row_data) == len(headers):
+                            row_data = [x.replace(",",".") for x in row_data]
                             data.append(row_data)
                 sql = 'INSERT INTO ACIDENTES (%s) VALUES (%s)' % (','.join(headers), ",".join(['?']*len(headers)))
                 c.executemany(sql, data)
