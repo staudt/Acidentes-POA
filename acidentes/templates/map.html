@@ -8,30 +8,13 @@
   <body>
     <div id="data" style="display:none;">{{ data }}</div>
     <div id="map"></div>
+    <script src="../static/map.js"></script>
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script type="text/javascript">
-    var map;
-    function initMap() {
-        var data = JSON.parse($("#data").text());
-        map = new google.maps.Map(document.getElementById('map'), {
-            center: {lat: -30.1008231, lng: -51.1589488},
-            zoom: 11
-        });
-        console.log(parseFloat(data["LATITUDE"]));
-        console.log(parseFloat(data["LONGITUDE"]));
-        var marker = new google.maps.Marker({
-            position: {lat: parseFloat(data["LATITUDE"]), lng: parseFloat(data["LONGITUDE"])},
-            icon: { 
-                path: google.maps.SymbolPath.CIRCLE, 
-                scale: 10
-            },
-            draggable: true,
-            map: map
-        });
-    }
-    </script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.3.1/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.3.1/leaflet.js"></script>
     <script async defer
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCFdbOIVgFvn0ndqtfRxu6NN7WjoBMfw_E&callback=initMap">
     </script>
+    <script src="http://matchingnotes.com/javascripts/leaflet-google.js"></script>
   </body>
 </html>

@@ -23,15 +23,19 @@ def get_data(query, index=-1):
 def db():
     return json.dumps(get_data("select * from ACIDENTES where LOG1='AV IPIRANGA'"))
 
-@app.route("/db/<int:index>")
+@app.route("/db/<index>")
 def db_index(index):
-    return json.dumps(get_data("select * from ACIDENTES where LOG1='AV IPIRANGA'", index))
+    return json.dumps(get_data("select * from ACIDENTES where ID = '" + index + "'", 0))
+
+@app.route("/<index>")
+def map(index):
+    databaseData = get_data("select * from ACIDENTES where ID = '" + index + "'", 0)
+    html = render_template('map.html', data = json.dumps(databaseData))
+    return html
     
 @app.route("/")
 def index():
-    databaseData = get_data("select * from ACIDENTES where LOG1='AV IPIRANGA'", 0)
-    html = render_template('map.html', data = json.dumps(databaseData))
-    return html
+    return map("558713")
 
 def main():
     log.info("Acidentes-POA v" + __version__)
