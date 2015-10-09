@@ -8,6 +8,16 @@ from flask import Flask
 import sqlite3
 import json
 
+TOP_N = """
+select via, round(ranking*1.0/custom_max, 4) as ranking from 
+(select a.custom_via as via, 
+		a.ranking, 
+		(select max(ranking) from ACIDENTES_COUNT) as custom_max
+from ACIDENTES_COUNT a)
+order by 2 desc
+limit {0}
+"""
+
 app = Flask(__name__)
 
 #http://stackoverflow.com/questions/3286525/return-sql-table-as-json-in-python
@@ -18,6 +28,10 @@ def get_data(query, index=-1):
                for i, value in enumerate(row)) for row in d.fetchall()]
     cur.close()
     return (r[index] if r else None) if index >= 0 else r
+
+@app.route("/query/top/<int:n>")
+def top(n):
+    return json.dumps(get_data(TOP_N.format(str(n))))
     
 @app.route("/db")
 def db():
