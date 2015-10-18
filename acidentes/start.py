@@ -41,6 +41,10 @@ def db():
 def db_index(index):
     return json.dumps(get_data("select * from ACIDENTES where ID = '" + index + "'", 0))
 
+@app.route("/tabela")
+def tabela():
+    return render_template('tabela.html')
+
 @app.route("/<index>")
 def map(index):
     databaseData = get_data("select * from ACIDENTES where ID = '" + index + "'", 0)

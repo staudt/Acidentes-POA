@@ -1,0 +1,38 @@
+<html>
+  <head>
+    <style type="text/css">
+      html, body { height: 100%; margin: 0; padding: 0; }
+    </style>
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+  </head>
+  <body>
+    <table id="tabela">
+      <tr>
+        <th>Ranking</th><th>Via</th><th>Latitude</th><th>Longitude</th>
+      </tr>
+    </table>
+
+    <script type="text/javascript">
+      (function() {
+        $.ajax({
+          url: '/query/top/10',
+          type: 'GET',
+          success: function(data) {
+            $('#tabela .ranking').remove();
+            $.each($.parseJSON(data), function(i, item) {
+              // aqui eu pego a latitude e longitude de cada via, uso 'via' ou devemos retornar um id tambem?
+              $('#tabela tr:last').after('<tr class="ranking"><td>' + item.ranking + '</td>'+
+                '<td>' + item.via + '</td>'+
+                '<td>?</td><td>?</td>'+
+                '</tr>');
+            })
+          },
+          error : function(data) {
+            $('#tabela .ranking').remove();
+            $('#tabela tr:last').after('<tr class="ranking"><td colspan="4">Erro ao tentar extrair dados. Tem certeza que o servidor esta rodando?</td></tr>');
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
