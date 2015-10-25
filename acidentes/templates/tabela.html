@@ -15,15 +15,14 @@
     <script type="text/javascript">
       (function() {
         $.ajax({
-          url: '/query/top/10',
+          url: '/query/top/20',
           type: 'GET',
           success: function(data) {
             $('#tabela .ranking').remove();
             $.each($.parseJSON(data), function(i, item) {
-              // aqui eu pego a latitude e longitude de cada via, uso 'via' ou devemos retornar um id tambem?
               $('#tabela tr:last').after('<tr class="ranking"><td>' + item.ranking + '</td>'+
-                '<td>' + item.via + '</td>'+
-                '<td>?</td><td>?</td>'+
+                  '<td>' + item.via + '</td>'+
+                  '<td>'+ item.latitude +'</td><td>'+ item.longitude +'</td>'+
                 '</tr>');
             })
           },

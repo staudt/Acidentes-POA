@@ -58,5 +58,5 @@ if __name__ == "__main__":
 
     con.commit()
     c.execute('DROP TABLE IF EXISTS ACIDENTES_COUNT')
-    c.execute('create table if not exists ACIDENTES_COUNT as select custom_via, count(*) as ranking from acidentes group by custom_via')
+    c.execute('create table if not exists ACIDENTES_COUNT as select custom_via, count(*) as ranking, latitude, longitude from acidentes group by custom_via')
     con.commit()

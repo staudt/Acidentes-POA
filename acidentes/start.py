@@ -9,10 +9,11 @@ import sqlite3
 import json
 
 TOP_N = """
-select via, round(ranking*1.0/custom_max, 4) as ranking from 
-(select a.custom_via as via, 
-		a.ranking, 
-		(select max(ranking) from ACIDENTES_COUNT) as custom_max
+select via, round(ranking*1.0/custom_max, 4) as ranking, latitude, longitude from
+(select a.custom_via as via,
+		a.ranking,
+		(select max(ranking) from ACIDENTES_COUNT) as custom_max,
+		a.latitude as latitude, a.longitude as longitude
 from ACIDENTES_COUNT a)
 order by 2 desc
 limit {0}
@@ -33,11 +34,7 @@ def get_data(query, index=-1):
 def top(n):
     return json.dumps(get_data(TOP_N.format(str(n))))
     
-@app.route("/db")
-def db():
-    return json.dumps(get_data("select * from ACIDENTES where LOG1='AV IPIRANGA'"))
-
-@app.route("/db/<index>")
+@app.route("/db/<int:index>")
 def db_index(index):
     return json.dumps(get_data("select * from ACIDENTES where ID = '" + index + "'", 0))
 
@@ -45,7 +42,7 @@ def db_index(index):
 def tabela():
     return render_template('tabela.html')
 
-@app.route("/<index>")
+@app.route("/<int:index>")
 def map(index):
     databaseData = get_data("select * from ACIDENTES where ID = '" + index + "'", 0)
     html = render_template('map.html', data = json.dumps(databaseData))
