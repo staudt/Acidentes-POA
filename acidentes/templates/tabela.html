@@ -4,6 +4,7 @@
       html, body { height: 100%; margin: 0; padding: 0; }
     </style>
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="http://maps.google.com/maps/api/js?sensor=false"  type="text/javascript"></script>
   </head>
   <body>
     <table id="tabela">
@@ -11,6 +12,15 @@
         <th>Ranking</th><th>Via</th><th>Latitude</th><th>Longitude</th>
       </tr>
     </table>
+
+  <div id="map" style="width: 100%; height: 500px;"></div>
+	<script type="text/javascript">
+	    map = new google.maps.Map(document.getElementById('map'), {
+	        center: {lat: -30.1008231, lng: -51.1589488},
+	        zoom: 11
+	    });
+	</script>
+
 
     <script type="text/javascript">
       (function() {
@@ -24,6 +34,17 @@
                   '<td>' + item.via + '</td>'+
                   '<td>'+ item.latitude +'</td><td>'+ item.longitude +'</td>'+
                 '</tr>');
+
+	            var marker = new google.maps.Marker({
+		            position: {lat: parseFloat(item.latitude), lng: parseFloat(item.longitude)},
+		            icon: { 
+		                path: google.maps.SymbolPath.CIRCLE, 
+		                scale: 10
+		            },
+		            draggable: true,
+		            map: map
+		        });
+
             })
           },
           error : function(data) {
