@@ -38,19 +38,9 @@ def top(n):
 def db_index(index):
     return json.dumps(get_data("select * from ACIDENTES where ID = '" + index + "'", 0))
 
-@app.route("/tabela")
-def tabela():
-    return render_template('tabela.html')
-
-@app.route("/<int:index>")
-def map(index):
-    databaseData = get_data("select * from ACIDENTES where ID = '" + index + "'", 0)
-    html = render_template('map.html', data = json.dumps(databaseData))
-    return html
-    
 @app.route("/")
-def index():
-    return map("558713")
+def tabela():
+    return render_template('mapa.html')
 
 def main():
     log.info("Acidentes-POA v" + __version__)

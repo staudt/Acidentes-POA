@@ -1,0 +1,68 @@
+<html>
+  <head>
+    <style type="text/css">
+      html, body { height: 100%; margin: 0; padding: 0; }
+      body { font-family: arial,sans-serif; }
+      table { border-collapse: collapse; }
+      table, td, th { border-bottom: 1px solid black; }
+    </style>
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="http://maps.google.com/maps/api/js?sensor=false&libraries=visualization"  type="text/javascript"></script>
+  </head>
+  <body>
+
+	<div id="map" style="width: 100%; height: 70%;"></div>
+
+	<br/>
+    <table id="tabela">
+      <tr>
+        <th>Ranking</th><th>Via</th><th>Latitude</th><th>Longitude</th>
+      </tr>
+    </table>
+
+    <script type="text/javascript">
+      (function() {
+
+      	function carregaTabela() {
+	        $.ajax({
+	          url: '/query/top/100',
+	          type: 'GET',
+	          success: function(data) {
+	          	var heatmap = [];
+	            $('#tabela .ranking').remove();
+	            $.each($.parseJSON(data), function(i, item) {
+	              $('#tabela tr:last').after('<tr class="ranking"><td>' + item.ranking + '</td>'+
+	                  '<td>' + item.via + '</td>'+
+	                  '<td>'+ item.latitude +'</td><td>'+ item.longitude +'</td>'+
+	                '</tr>');
+	              heatmap.push({location: new google.maps.LatLng(parseFloat(item.latitude), parseFloat(item.longitude)), weight: parseFloat(item.ranking)});
+	            })
+
+		          heatmap = new google.maps.visualization.HeatmapLayer({
+				    data: heatmap,
+				    radius: 40,
+				    map: map
+				  });
+
+	          },
+	          error : function(data) {
+	            $('#tabela .ranking').remove();
+	            $('#tabela tr:last').after('<tr class="ranking"><td colspan="4">Erro ao tentar extrair dados. Tem certeza que o servidor esta rodando?</td></tr>');
+	          }
+	        });
+		}
+
+		var heatmap;
+		map = new google.maps.Map(document.getElementById('map'), {
+		    center: {lat: -30.1008231, lng: -51.1589488},
+		    zoom: 11
+		});
+		google.maps.event.addListener(map, 'tilesloaded', function() {
+			carregaTabela();
+		});
+
+
+      })();
+    </script>
+  </body>
+</html>
