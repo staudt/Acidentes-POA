@@ -15,6 +15,11 @@ if __name__ == "__main__":
         print('ANTES DE EXECUTAR: descompacte o arquivo ./dados/dados.zip no diretorio ./dados')
         print('Sem arquivos em dados/*.csv o banco não pode ser populado')
         sys.exit(1)
+    try:
+        os.remove('dados.db')
+    except:
+        print('Nao foi possivel deletar dados.db. Certifique-se que nao esta em uso')
+        sys.exit(1)
     con = sqlite3.connect('dados.db')
     con.text_factory = str
     c = con.cursor()
@@ -37,6 +42,8 @@ if __name__ == "__main__":
                         row_data = row.split(';')
                         if len(row_data) == len(headers):
                             row_data = [x.replace(",",".") for x in row_data]
+                            if row_data[-1].startswith('-299'): # correcao de um erro no csv original
+                                row_data[-1] = row_data[-1].replace('-299', '-29.9')
                             data.append(row_data)
                 sql = 'INSERT INTO ACIDENTES (%s) VALUES (%s)' % (','.join(headers), ",".join(['?']*len(headers)))
                 c.executemany(sql, data)
@@ -58,5 +65,19 @@ if __name__ == "__main__":
 
     con.commit()
     c.execute('DROP TABLE IF EXISTS ACIDENTES_COUNT')
-    c.execute('create table if not exists ACIDENTES_COUNT as select custom_via, count(*) as ranking, latitude, longitude from acidentes group by custom_via')
+    c.execute('''
+        create table ACIDENTES_COUNT as select
+                custom_via,
+                count(*) as total,
+                latitude, longitude,
+                SUM(feridos) as feridos,
+                SUM(mortes) as mortes,
+                SUM(fatais) as fatais,
+                SUM(taxi) as taxi,
+                SUM(moto) as moto,
+                SUM(lotacao) as lotacao,
+                SUM(onibus_urb) as onibus,
+                SUM(caminhao) as caminhao,
+                SUM(bicicleta) as bicicleta
+            from acidentes group by custom_via''')
     con.commit()

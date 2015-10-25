@@ -8,16 +8,8 @@ from flask import Flask
 import sqlite3
 import json
 
-TOP_N = """
-select via, round(ranking*1.0/custom_max, 4) as ranking, latitude, longitude from
-(select a.custom_via as via,
-		a.ranking,
-		(select max(ranking) from ACIDENTES_COUNT) as custom_max,
-		a.latitude as latitude, a.longitude as longitude
-from ACIDENTES_COUNT a)
-order by 2 desc
-limit {0}
-"""
+TOP_N = """select custom_via as via, {0} as ranking, latitude, longitude
+            from ACIDENTES_COUNT order by ranking DESC limit {1}"""
 
 app = Flask(__name__)
 
@@ -32,8 +24,12 @@ def get_data(query, index=-1):
 
 @app.route("/query/top/<int:n>")
 def top(n):
-    return json.dumps(get_data(TOP_N.format(str(n))))
+    return json.dumps(get_data(TOP_N.format('total', str(n))))
     
+@app.route("/query/top/<campo>/<int:n>")
+def top_campo(campo, n):
+    return json.dumps(get_data(TOP_N.format(campo, str(n))))
+
 @app.route("/db/<int:index>")
 def db_index(index):
     return json.dumps(get_data("select * from ACIDENTES where ID = '" + index + "'", 0))
