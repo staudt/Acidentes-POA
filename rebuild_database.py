@@ -2,10 +2,19 @@
 # -*- coding: utf-8 -*-
 import sqlite3
 import os
-import zlib
+import sys
 
 
 if __name__ == "__main__":
+    tem_arquivos_csv = False
+    for filename in os.listdir('%s/dados' % os.getcwd()):
+        if filename.endswith('.csv'):
+            tem_arquivos_csv = True
+            break
+    if not tem_arquivos_csv:
+        print('ANTES DE EXECUTAR: descompacte o arquivo ./dados/dados.zip no diretorio ./dados')
+        print('Sem arquivos em dados/*.csv o banco não pode ser populado')
+        sys.exit(1)
     con = sqlite3.connect('dados.db')
     con.text_factory = str
     c = con.cursor()
@@ -14,16 +23,15 @@ if __name__ == "__main__":
     con.commit()
 
     for filename in os.listdir('%s/dados' % os.getcwd()):
-        if filename.endswith('.csv.zlib'):
-            with open('%s/dados/%s' % (os.getcwd(), filename), 'rb') as f:
-                content = zlib.decompress(f.read())
+        if filename.endswith('.csv'):
+            with open('%s/dados/%s' % (os.getcwd(), filename), 'r') as f:
+                content = f.read()
                 first_line_of_file = True
                 headers = ''
                 data = []
-                for row in content.split("\r\n"):
+                for row in content.splitlines():
                     if first_line_of_file:
-                        headers = row.split(';')
-                        
+                        headers = str(row).split(';')
                         first_line_of_file = False
                     else:
                         row_data = row.split(';')
@@ -33,4 +41,22 @@ if __name__ == "__main__":
                 sql = 'INSERT INTO ACIDENTES (%s) VALUES (%s)' % (','.join(headers), ",".join(['?']*len(headers)))
                 c.executemany(sql, data)
                 con.commit()
+    c.execute('alter table acidentes add column custom_via TEXT')
+    c.execute("update acidentes set custom_via = local_via where local_via like '%&%'")
+    c.execute('''update acidentes set custom_via = log1
+                where
+                    local_via like '%0%' or
+                    local_via like '%1%' or
+                    local_via like '%2%' or
+                    local_via like '%3%' or
+                    local_via like '%4%' or
+                    local_via like '%5%' or
+                    local_via like '%6%' or
+                    local_via like '%7%' or
+                    local_via like '%8%' or
+                    local_via like '%9%' ''')
 
+    con.commit()
+    c.execute('DROP TABLE IF EXISTS ACIDENTES_COUNT')
+    c.execute('create table if not exists ACIDENTES_COUNT as select custom_via, count(*) as ranking from acidentes group by custom_via')
+    con.commit()
