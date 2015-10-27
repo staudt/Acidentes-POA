@@ -80,4 +80,11 @@ if __name__ == "__main__":
                 SUM(caminhao) as caminhao,
                 SUM(bicicleta) as bicicleta
             from acidentes group by custom_via''')
+    for i in ["feridos", "mortes", "fatais", "taxi", "moto", "lotacao", "onibus_urb", "caminhao","bicicleta"]:
+        c.execute('''
+            create table ACIDENTES_{0} as 
+            select custom_via, points from (select custom_via,
+                    SUM({0}) as ranking,
+                    group_concat(latitude || ';' || longitude) as points
+            from acidentes group by custom_via) where ranking > 0'''.format(i))
     con.commit()

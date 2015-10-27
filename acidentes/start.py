@@ -8,6 +8,17 @@ from flask import Flask
 import sqlite3
 import json
 
+TOP_N_OLD = """
+select via, round({0}*1.0/custom_max, 4) as ranking, latitude, longitude from
+(select a.custom_via as via,
+		a.{0},
+		(select max({0}) from ACIDENTES_COUNT) as custom_max,
+		a.latitude as latitude, a.longitude as longitude
+from ACIDENTES_COUNT a)
+order by 2 desc
+limit {1}
+"""
+
 TOP_N = """select custom_via as via, {0} as ranking, latitude, longitude
             from ACIDENTES_COUNT order by ranking DESC limit {1}"""
 

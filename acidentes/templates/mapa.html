@@ -66,7 +66,7 @@
 	              $('#tabela tr:last').after('<tr class="ranking"><td>' + item.ranking + '</td>'+
 	                  '<td><a href="#" onclick="marcarNoMapa(\''+ item.via +'\', '+ item.latitude +', '+ item.longitude +')">' + item.via + '</a></td>'+
 	                '</tr>');
-	              heatmap_locations.push({location: new google.maps.LatLng(parseFloat(item.latitude), parseFloat(item.longitude)), weight: parseFloat(item.ranking)});
+	              heatmap_locations.push({location: new google.maps.LatLng(parseFloat(item.latitude), parseFloat(item.longitude)), weight: 10*parseFloat(item.ranking)});
 	            })
 
 		          heatmap = new google.maps.visualization.HeatmapLayer({
