@@ -18,10 +18,12 @@ from ACIDENTES_COUNT a)
 order by 2 desc
 limit {1}
 """
+TOP_N_TOTAL = """select custom_via as via, total as ranking, latitude, longitude
+            from ACIDENTES_COUNT order by ranking DESC limit {0}"""
 
-TOP_N = """select custom_via as via, {0} as ranking, latitude, longitude
-            from ACIDENTES_COUNT order by ranking DESC limit {1}"""
-
+TOP_N = """ select custom_via as via, ranking, points
+            from ACIDENTES_{0} order by ranking DESC limit {1}"""
+            
 app = Flask(__name__)
 
 #http://stackoverflow.com/questions/3286525/return-sql-table-as-json-in-python

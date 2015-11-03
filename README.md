@@ -1,8 +1,17 @@
 # Acidentes-POA
 Visualização de métricas de acidentes de trânsito em Porto Alegre
 
-http://localhost:5000/ shows a Google Maps with a Marker on the first accident for 'AV IPIRANGA'
+Requirements:
+> Python (obvious :P)
+> Flask
 
-http://localhost:5000/db fetches all data on Database, where Log1='AV IPIRANGA', for testing purpose
+Setup:
+1. Unzip the files on dados/dados.zip
+2. python rebuild_database.py
+3. python run.py 
 
-http://localhost:5000/db/index fetches a single data from the Database, where Log1='AV IPIRANGA', for testing purpose
+Endpoints (all based on http://localhost:5000):
+> / : main view
+> /query/top/<int:n> : get the total top <n> vias with accidents
+> /query/top/<campo>/<int:n> : get the <campo> top <n> vias with accidents
+> /db/<int:index> : get the json from the row where ID = <index> 

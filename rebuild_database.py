@@ -18,13 +18,12 @@ if __name__ == "__main__":
     try:
         os.remove('dados.db')
     except:
-        print('Nao foi possivel deletar dados.db. Certifique-se que nao esta em uso')
-        sys.exit(1)
+        print('Nao foi possivel deletar dados.db. Certifique-se que nao esta em uso ou que o arquivo exista')
     con = sqlite3.connect('dados.db')
     con.text_factory = str
     c = con.cursor()
     c.execute('DROP TABLE IF EXISTS ACIDENTES')
-    c.execute('CREATE TABLE ACIDENTES (ID,LOCAL_VIA,LOG1,LOG2,PREDIAL1,LOCAL,TIPO_ACID,QUEDA_ARR,DATA_HORA,DATA,DIA_SEM,HORA,FERIDOS,FERIDOS_GR,MORTES,MORTE_POST,FATAIS,AUTO,TAXI,LOTACAO,ONIBUS_URB,ONIBUS_MET,ONIBUS_INT,CAMINHAO,MOTO,CARROCA,BICICLETA,OUTRO,TEMPO,NOITE_DIA,FONTE,BOLETIM,REGIAO,DIA,MES,ANO,FX_HORA,CONT_ACID,CONT_VIT,UPS,CONSORCIO,CORREDOR,LONGITUDE,LATITUDE)')
+    c.execute('CREATE TABLE ACIDENTES (ID,LOCAL_VIA,LOG1,LOG2,PREDIAL1,LOCAL,TIPO_ACID,QUEDA_ARR,DATA_HORA,DATA,DIA_SEM,HORA,FERIDOS,FERIDOS_GR,MORTES,MORTE_POST,FATAIS,AUTO,TAXI,LOTACAO,ONIBUS_URB,ONIBUS_MET,ONIBUS_INT,CAMINHAO,MOTO,CARROCA,BICICLETA,OUTRO,TEMPO,NOITE_DIA,FONTE,BOLETIM,REGIAO,DIA,MES,ANO,FX_HORA,CONT_ACID,CONT_VIT,UPS,CONSORCIO,CORREDOR,LONGITUDE,LATITUDE,custom_via)')
     con.commit()
 
     for filename in os.listdir('%s/dados' % os.getcwd()):
@@ -48,7 +47,6 @@ if __name__ == "__main__":
                 sql = 'INSERT INTO ACIDENTES (%s) VALUES (%s)' % (','.join(headers), ",".join(['?']*len(headers)))
                 c.executemany(sql, data)
                 con.commit()
-    c.execute('alter table acidentes add column custom_via TEXT')
     c.execute("update acidentes set custom_via = local_via where local_via like '%&%'")
     c.execute('''update acidentes set custom_via = log1
                 where
@@ -62,11 +60,26 @@ if __name__ == "__main__":
                     local_via like '%7%' or
                     local_via like '%8%' or
                     local_via like '%9%' ''')
-
     con.commit()
     c.execute('DROP TABLE IF EXISTS ACIDENTES_COUNT')
     c.execute('''
-        create table ACIDENTES_COUNT as select
+        create table ACIDENTES_COUNT(
+                custom_via constraint pk_acidentes_count_custom_via primary key,
+                total INTEGER,
+                latitude, 
+                longitude,
+                feridos INTEGER,
+                mortes INTEGER,
+                fatais INTEGER,
+                taxi INTEGER,
+                moto INTEGER,
+                lotacao INTEGER,
+                onibus INTEGER,
+                caminhao INTEGER,
+                bicicleta INTEGER)''')
+    con.commit()
+    c.execute('''
+        insert into ACIDENTES_COUNT select
                 custom_via,
                 count(*) as total,
                 latitude, longitude,
@@ -81,10 +94,17 @@ if __name__ == "__main__":
                 SUM(bicicleta) as bicicleta
             from acidentes group by custom_via''')
     for i in ["feridos", "mortes", "fatais", "taxi", "moto", "lotacao", "onibus_urb", "caminhao","bicicleta"]:
+        c.execute('''create table ACIDENTES_{0} (
+                     custom_via constraint pk_acidentes_{0}_custom_via primary key, 
+                     ranking INTEGER,
+                     points TEXT,
+                     FOREIGN KEY (custom_via) references ACIDENTES_COUNT(custom_via)
+                     )'''.format(i))
+        con.commit()
         c.execute('''
-            create table ACIDENTES_{0} as 
-            select custom_via, points from (select custom_via,
+            insert into ACIDENTES_{0} 
+                    select custom_via, ranking, points from (select custom_via,
                     SUM({0}) as ranking,
                     group_concat(latitude || ';' || longitude) as points
             from acidentes group by custom_via) where ranking > 0'''.format(i))
-    con.commit()
+        con.commit()
