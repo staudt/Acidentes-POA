@@ -1,32 +1,59 @@
-var map;
-function initMap() {
-    var data = JSON.parse($("#data").text());
-    
-    //Leaf tryout - not working :(
-    /*
-    var geocoder = new google.maps.Geocoder();
-    var map = new L.Map('map', {center: new L.LatLng(-30.1008231, -51.1589488), zoom: 9});
-    var googleLayer = new L.Google('ROADMAP');
-    map.addLayer(googleLayer);
-    L.Marker([parseFloat(data["LATITUDE"]), parseFloat(data["LONGITUDE"])]).addTo(map);
-    */
-    
-    map = new google.maps.Map(document.getElementById('map'), {
-        center: {lat: -30.1008231, lng: -51.1589488},
-        zoom: 11
+var map, heatmap, marcador;
+
+function marcarNoMapa(via, latitude, longitude) {
+    if (typeof marcador != "undefined") {
+        marcador.setMap(null);
+    }
+    marcador = new google.maps.Marker({
+        position: {lat: latitude, lng: longitude},
+        map: map,
+        title: via
     });
-    if (data)
-    {
-        console.log(parseFloat(data["LATITUDE"]));
-        console.log(parseFloat(data["LONGITUDE"]));
-        var marker = new google.maps.Marker({
-            position: {lat: parseFloat(data["LATITUDE"]), lng: parseFloat(data["LONGITUDE"])},
-            icon: { 
-                path: google.maps.SymbolPath.CIRCLE, 
-                scale: 10
-            },
-            draggable: true,
+    map.panTo({lat: latitude, lng: longitude});
+}
+
+function parseJSONToHeatmap(data) {
+    var heatmap_locations = [];
+    $.each($.parseJSON(data), function(i, item) {
+        var via = item.via,
+            ranking = item.ranking,
+            points = item.points,
+            bound = new google.maps.LatLngBounds();        
+        if (points){
+            $.each(points, function (j, jitem) { 
+                heatmap_locations.push({location: new google.maps.LatLng(parseFloat(jitem.latitude), parseFloat(jitem.longitude)), weight: parseFloat(ranking)});
+                bound.extend( new google.maps.LatLng(parseFloat(jitem.latitude), parseFloat(jitem.longitude)));
+            });            
+        }
+        else{// damn 'total' falls here, only a single point to parse
+            heatmap_locations.push({location: new google.maps.LatLng(parseFloat(item.latitude), parseFloat(item.longitude)), weight: 10*parseFloat(ranking)});
+            bound.extend( new google.maps.LatLng(parseFloat(item.latitude), parseFloat(item.longitude)));
+        }
+        $('#tabela tr:last').after('<tr class="ranking"><td>' + ranking + '</td>'+
+        '<td><a href="#" onclick="marcarNoMapa(\''+ via +'\', '+ bound.getCenter().lat() +', '+ bound.getCenter().lng() +')">' + via + '</a></td>'+'</tr>');
+    })
+    return heatmap_locations;
+}
+
+function carregaTabela() {
+    $('#tabela .ranking').remove();
+    if (typeof heatmap != "undefined") {
+        heatmap.setMap(null);
+    }
+    $.ajax({
+      url: '/query/top/'+ $('#busca option:selected').val() +'/10',
+      type: 'GET',
+      success: function(data) {
+        var heatmap_locations = parseJSONToHeatmap(data);
+        heatmap = new google.maps.visualization.HeatmapLayer({
+            data: heatmap_locations,
+            radius: 40,
             map: map
         });
-    }
+      },
+      error : function(data) {	         
+        $('#tabela tr:last').after('<tr class="ranking"><td colspan="4">Erro ao tentar extrair dados. Tem certeza que o servidor esta rodando?</td></tr>');
+      }
+    });
 }
+

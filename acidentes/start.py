@@ -37,11 +37,20 @@ def get_data(query, index=-1):
 
 @app.route("/query/top/<int:n>")
 def top(n):
-    return json.dumps(get_data(TOP_N.format('total', str(n))))
+    return top_campo("total", n)
     
 @app.route("/query/top/<campo>/<int:n>")
 def top_campo(campo, n):
-    return json.dumps(get_data(TOP_N.format(campo, str(n))))
+    if campo == "total":
+        data = get_data(TOP_N_TOTAL.format(str(n)))
+    else:
+        data = get_data(TOP_N.format(campo, str(n)))
+        for i in range(0, len(data)):
+            data[i]["points"] = data[i]["points"].split(",")
+            for d in range(0, len(data[i]["points"])):
+                lat,long = data[i]["points"][d].split(";")
+                data[i]["points"][d] = {"latitude" : lat, "longitude" : long}
+    return json.dumps(data)
 
 @app.route("/db/<int:index>")
 def db_index(index):

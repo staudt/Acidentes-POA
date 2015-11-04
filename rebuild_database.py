@@ -60,6 +60,7 @@ if __name__ == "__main__":
                     local_via like '%7%' or
                     local_via like '%8%' or
                     local_via like '%9%' ''')
+    c.execute('''CREATE INDEX i_acidentes_custom_via ON acidentes (custom_via);''')
     con.commit()
     c.execute('DROP TABLE IF EXISTS ACIDENTES_COUNT')
     c.execute('''
@@ -89,7 +90,7 @@ if __name__ == "__main__":
                 SUM(taxi) as taxi,
                 SUM(moto) as moto,
                 SUM(lotacao) as lotacao,
-                SUM(onibus_urb) as onibus,
+                SUM(onibus_urb) as onibus_urb,
                 SUM(caminhao) as caminhao,
                 SUM(bicicleta) as bicicleta
             from acidentes group by custom_via''')
