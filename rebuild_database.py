@@ -19,93 +19,82 @@ if __name__ == "__main__":
         os.remove('dados.db')
     except:
         print('Nao foi possivel deletar dados.db. Certifique-se que nao esta em uso ou que o arquivo exista')
+        sys.exit(1)
     con = sqlite3.connect('dados.db')
     con.text_factory = str
     c = con.cursor()
     c.execute('DROP TABLE IF EXISTS ACIDENTES')
-    c.execute('CREATE TABLE ACIDENTES (ID,LOCAL_VIA,LOG1,LOG2,PREDIAL1,LOCAL,TIPO_ACID,QUEDA_ARR,DATA_HORA,DATA,DIA_SEM,HORA,FERIDOS,FERIDOS_GR,MORTES,MORTE_POST,FATAIS,AUTO,TAXI,LOTACAO,ONIBUS_URB,ONIBUS_MET,ONIBUS_INT,CAMINHAO,MOTO,CARROCA,BICICLETA,OUTRO,TEMPO,NOITE_DIA,FONTE,BOLETIM,REGIAO,DIA,MES,ANO,FX_HORA,CONT_ACID,CONT_VIT,UPS,CONSORCIO,CORREDOR,LONGITUDE,LATITUDE,custom_via)')
-    con.commit()
-
+    c.execute('''CREATE TABLE ACIDENTES (
+                    VIA text,
+                    LOCAL text,     -- Logradouro, cruzamento, etc
+                    TIPO_ACID text, -- Abalroamento, Atropelamento, etc
+                    DIA_SEM text,    -- Sexta-feira, etc
+                    DIA int,
+                    MES int,
+                    ANO int,
+                    LATLONG text,    -- (precessar) latitude;longitude
+                -- contagens
+                    FERIDOS int,    -- FERIDOS + FERIDOS_GR
+                    MORTES int,     -- MORTES + MORTES_POST
+                -- booleanos
+                    FATAL int,      -- FATAIS
+                    AUTO int,       -- automovel
+                    TAXI int,
+                    LOTACAO int,
+                    ONIBUS int,     -- ONIBUS_URB
+                    CAMINHAO int,
+                    MOTO int,
+                    CARROCA int,
+                    BICICLETA int,
+                    NOITE int       -- 0.dia 1.noite
+                );
+    ''')
+    c.execute('CREATE INDEX VIAINDEX ON ACIDENTES (VIA);');
+    c.execute('CREATE INDEX ANOINDEX ON ACIDENTES (ANO);');
+    
     for filename in os.listdir('%s/dados' % os.getcwd()):
         if filename.endswith('.csv'):
+            print('Processando %s' % filename)
             with open('%s/dados/%s' % (os.getcwd(), filename), 'r') as f:
-                content = f.read()
-                first_line_of_file = True
-                headers = ''
+                content = f.read().splitlines()
+                headers = str(content[0]).split(';')
                 data = []
-                for row in content.splitlines():
-                    if first_line_of_file:
-                        headers = str(row).split(';')
-                        first_line_of_file = False
-                    else:
-                        row_data = row.split(';')
-                        if len(row_data) == len(headers):
-                            row_data = [x.replace(",",".") for x in row_data]
-                            if row_data[-1].startswith('-299'): # correcao de um erro no csv original
-                                row_data[-1] = row_data[-1].replace('-299', '-29.9')
-                            data.append(row_data)
-                sql = 'INSERT INTO ACIDENTES (%s) VALUES (%s)' % (','.join(headers), ",".join(['?']*len(headers)))
+                for row_content in content[1:]:
+                    row = row_content.split(';')
+                    if len(row) == len(headers):
+                        row = [x.replace(",",".") for x in row]
+                        data.append([
+                            row[headers.index('LOG1')].capitalize() + (
+                                ' & %s' % row[headers.index('LOG2')].capitalize() if len(row[headers.index('LOG2')])>1 else ''
+                            ),
+                            row[headers.index('LOCAL')].capitalize(),
+                            row[headers.index('TIPO_ACID')].capitalize(),
+                            row[headers.index('DIA_SEM')].capitalize(),
+                            int(row[headers.index('DIA')]),
+                            int(row[headers.index('MES')]),
+                            int(row[headers.index('ANO')]),
+                            '%s;%s' % (
+                                row[headers.index('LATITUDE')].replace('-299', '-29.9'), # fix de um erro nos CSVs
+                                row[headers.index('LONGITUDE')]
+                            ),
+                            
+                            int(row[headers.index('FERIDOS')]),
+                            int(row[headers.index('MORTES')]),
+
+                            int(row[headers.index('FATAIS')]),
+                            int(row[headers.index('AUTO')]),
+                            int(row[headers.index('TAXI')]),
+                            int(row[headers.index('LOTACAO')]),
+                            int(row[headers.index('ONIBUS_URB')]),
+                            int(row[headers.index('CAMINHAO')]),
+                            int(row[headers.index('MOTO')]),
+                            int(row[headers.index('CARROCA')]),
+                            int(row[headers.index('BICICLETA')]),
+                            1 if row[headers.index('NOITE_DIA')]=='NOITE' else 0,
+                        ])
+
+                sql = '''INSERT INTO ACIDENTES VALUES (%s)''' % (",".join(['?']*len(data[0])))
                 c.executemany(sql, data)
                 con.commit()
-    c.execute("update acidentes set custom_via = local_via where local_via like '%&%'")
-    c.execute('''update acidentes set custom_via = log1
-                where
-                    local_via like '%0%' or
-                    local_via like '%1%' or
-                    local_via like '%2%' or
-                    local_via like '%3%' or
-                    local_via like '%4%' or
-                    local_via like '%5%' or
-                    local_via like '%6%' or
-                    local_via like '%7%' or
-                    local_via like '%8%' or
-                    local_via like '%9%' ''')
-    c.execute('''CREATE INDEX i_acidentes_custom_via ON acidentes (custom_via);''')
-    con.commit()
-    c.execute('DROP TABLE IF EXISTS ACIDENTES_COUNT')
-    c.execute('''
-        create table ACIDENTES_COUNT(
-                custom_via constraint pk_acidentes_count_custom_via primary key,
-                total INTEGER,
-                latitude, 
-                longitude,
-                feridos INTEGER,
-                mortes INTEGER,
-                fatais INTEGER,
-                taxi INTEGER,
-                moto INTEGER,
-                lotacao INTEGER,
-                onibus INTEGER,
-                caminhao INTEGER,
-                bicicleta INTEGER)''')
-    con.commit()
-    c.execute('''
-        insert into ACIDENTES_COUNT select
-                custom_via,
-                count(*) as total,
-                latitude, longitude,
-                SUM(feridos) as feridos,
-                SUM(mortes) as mortes,
-                SUM(fatais) as fatais,
-                SUM(taxi) as taxi,
-                SUM(moto) as moto,
-                SUM(lotacao) as lotacao,
-                SUM(onibus_urb) as onibus_urb,
-                SUM(caminhao) as caminhao,
-                SUM(bicicleta) as bicicleta
-            from acidentes group by custom_via''')
-    for i in ["feridos", "mortes", "fatais", "taxi", "moto", "lotacao", "onibus_urb", "caminhao","bicicleta"]:
-        c.execute('''create table ACIDENTES_{0} (
-                     custom_via constraint pk_acidentes_{0}_custom_via primary key, 
-                     ranking INTEGER,
-                     points TEXT,
-                     FOREIGN KEY (custom_via) references ACIDENTES_COUNT(custom_via)
-                     )'''.format(i))
-        con.commit()
-        c.execute('''
-            insert into ACIDENTES_{0} 
-                    select custom_via, ranking, points from (select custom_via,
-                    SUM({0}) as ranking,
-                    group_concat(latitude || ';' || longitude) as points
-            from acidentes group by custom_via) where ranking > 0'''.format(i))
-        con.commit()
+    
+    print('Pronto!')
