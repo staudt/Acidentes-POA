@@ -2,13 +2,13 @@
 Visualização de métricas de acidentes de trânsito em Porto Alegre
 
 Requirements:
-> Python (obvious :P)
-> Flask
+> Python (download & install: https://www.python.org/downloads/)
+> Flask (download & install: http://flask.pocoo.org/docs/0.10/installation/)
 
 Setup:
-1. Unzip the files on dados/dados.zip
-2. python rebuild_database.py
-3. python run.py 
+1. Unzip the files Acidentes-POA-master/dados/dados.zip into Acidentes-POA-master/dados
+2. Run: python rebuild_database.py
+3. Run: python run.py 
 
 Endpoints (all based on http://localhost:5000):
 > / : main view
