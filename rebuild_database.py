@@ -20,7 +20,7 @@ if __name__ == "__main__":
             os.remove('dados.db')
         except:
             print('Nao foi possivel deletar dados.db. Certifique-se que nao esta em uso ou que o arquivo exista')
-        sys.exit(1)
+            sys.exit(1)
     con = sqlite3.connect('dados.db')
     con.text_factory = str
     c = con.cursor()
@@ -32,7 +32,7 @@ if __name__ == "__main__":
                     dia int,
                     mes int,
                     ano int,
-                    latlong text,    -- (precessar) latitude;longitude
+                    latlng text,    -- (precessar) latitude;longitude
                 -- contagens
                     feridos int,    -- FERIDOS + FERIDOS_GR
                     mortes int,     -- MORTES + MORTES_POST
