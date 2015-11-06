@@ -8,54 +8,25 @@ from flask import Flask
 import sqlite3
 import json
 
-TOP_N_OLD = """
-select via, round({0}*1.0/custom_max, 4) as ranking, latitude, longitude from
-(select a.custom_via as via,
-		a.{0},
-		(select max({0}) from ACIDENTES_COUNT) as custom_max,
-		a.latitude as latitude, a.longitude as longitude
-from ACIDENTES_COUNT a)
-order by 2 desc
-limit {1}
-"""
-TOP_N_TOTAL = """select custom_via as via, total as ranking, latitude, longitude
-            from ACIDENTES_COUNT order by ranking DESC limit {0}"""
 
-TOP_N = """ select custom_via as via, ranking, points
-            from ACIDENTES_{0} order by ranking DESC limit {1}"""
-            
 app = Flask(__name__)
 
-#http://stackoverflow.com/questions/3286525/return-sql-table-as-json-in-python
-def get_data(query, index=-1):
+def rows_to_dict(rows):
+    return [dict((rows.description[i][0], value) \
+               for i, value in enumerate(row)) for row in rows.fetchall()]
+
+@app.route("/query/top/<int:count>")
+def top(count):
     cur = sqlite3.connect('dados.db')
-    d = cur.execute(query)
-    r = [dict((d.description[i][0], value) \
-               for i, value in enumerate(row)) for row in d.fetchall()]
-    cur.close()
-    return (r[index] if r else None) if index >= 0 else r
-
-@app.route("/query/top/<int:n>")
-def top(n):
-    return top_campo("total", n)
+    query_top_vias = "SELECT COUNT(via) AS ranking, via, latlong FROM acidentes WHERE ano=2014 AND moto=1 GROUP BY via ORDER BY ranking DESC LIMIT %s" % count
+    top_vias = rows_to_dict(cur.execute(query_top_vias))
     
-@app.route("/query/top/<campo>/<int:n>")
-def top_campo(campo, n):
-    if campo == "total":
-        data = get_data(TOP_N_TOTAL.format(str(n)))
-    else:
-        data = get_data(TOP_N.format(campo, str(n)))
-        for i in range(0, len(data)):
-            data[i]["points"] = data[i]["points"].split(",")
-            for d in range(0, len(data[i]["points"])):
-                lat,long = data[i]["points"][d].split(";")
-                data[i]["points"][d] = {"latitude" : lat, "longitude" : long}
-    return json.dumps(data)
-
-@app.route("/db/<int:index>")
-def db_index(index):
-    return json.dumps(get_data("select * from ACIDENTES where ID = '" + index + "'", 0))
-
+    where_vias_para_coordenadas = ' or '.join([("via='%s'" % v['via']) for v in top_vias])
+    query_coordenadas = "SELECT latlong FROM acidentes WHERE ano=2014 AND moto=1 AND (%s) LIMIT 3000" % where_vias_para_coordenadas
+    coordenadas = [value[-1] for value in cur.execute(query_coordenadas).fetchall()]
+    cur.close()
+    return json.dumps({'top':top_vias, 'coordinates':coordenadas})
+    
 @app.route("/")
 def tabela():
     return render_template('mapa.html')
