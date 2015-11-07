@@ -23,13 +23,8 @@ def top(count):
     query_top_vias = "SELECT COUNT(via) AS ranking, via, latlng FROM acidentes WHERE ano=2014 GROUP BY via ORDER BY ranking DESC LIMIT %s" % count
     top_vias = rows_to_dict(cur.execute(query_top_vias))
     
-<<<<<<< Updated upstream
-    where_vias_para_coordenadas = ' or '.join([("via='%s'" % v['via']) for v in top_vias])
-    query_coordenadas = "SELECT latlng FROM acidentes WHERE ano=2014 AND moto=1 AND (%s) LIMIT 3000" % where_vias_para_coordenadas
-=======
     where_vias_para_coordenadas = ", ".join([("'%s'" % v['via']) for v in top_vias])
     query_coordenadas = "SELECT latlng FROM acidentes WHERE ano=2014 AND via IN (%s) LIMIT 8000" % where_vias_para_coordenadas
->>>>>>> Stashed changes
     coordenadas = [value[-1] for value in cur.execute(query_coordenadas).fetchall()]
     cur.close()
     return json.dumps({'top': top_vias, 'coordenadas': coordenadas})
