@@ -13,10 +13,10 @@ body, td, th {
 	position: absolute;
 	left: 0px;
 	top: 44px;
-	margin: 8px 0px 8px 8px;
-	width: 260px;
+	margin: 8px 0px 8px 10px;
+	width: 280px;
 	height: 500px;
-	overflow-y: scroll;
+	overflow-y: auto;
 	overflow-x: hidden;
 	z-index: 10;
 	padding: 4px;

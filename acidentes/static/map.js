@@ -1,3 +1,18 @@
+
+/* Este bloco só roda depois que a pagina esta carregada */
+$(function() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: {lat: -30.081143, lng: -51.185737},
+        zoom: 12
+    });
+    google.maps.event.addListenerOnce(map, 'tilesloaded', function() {
+        carregaTabela();
+    });
+    $('.filtro').change(function () {
+        carregaTabela();
+    });
+});
+
 var map, heatmap, marcador;
 
 function marcarNoMapa(via, latitude, longitude) {
@@ -13,13 +28,30 @@ function marcarNoMapa(via, latitude, longitude) {
 }
 
 function carregaTabela() {
-    ano = $('select#ano').val();
+    function montaUrl() {
+        var query = [
+            'ano=' + $('select#ano').val(),
+            'ranking=' + $('select#ranking').val(),
+            'tipo_acid=' + $('select#tipo_acid').val(),
+            'mes=' + $('select#mes').val(),
+            'dia_sem=' + $('select#dia_sem').val(),
+            'auto=' + ($('#auto').prop('checked') ? 1 : ''),
+            'moto=' + ($('#moto').prop('checked') ? 1 : ''),
+            'taxi=' + ($('#taxi').prop('checked') ? 1 : ''),
+            'lotacao=' + ($('#lotacao').prop('checked') ? 1 : ''),
+            'onibus=' + ($('#onibus').prop('checked') ? 1 : ''),
+            'caminhao=' + ($('#caminhao').prop('checked') ? 1 : ''),
+            'bicicleta=' + ($('#bicicleta').prop('checked') ? 1 : '')
+        ];
+        return '/query/top/50?' + query.join('&');
+    }
+    ;
     $('#tabela .ranking').remove();
     if (typeof heatmap != "undefined") {
         heatmap.setMap(null);
     }
     $.ajax({
-      url: '/query/top/50?ano=' + ano,
+      url: montaUrl(),
       type: 'GET',
       success: function(data) {
         results = $.parseJSON(data);
