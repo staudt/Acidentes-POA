@@ -13,18 +13,23 @@ function marcarNoMapa(via, latitude, longitude) {
 }
 
 function carregaTabela() {
+    ano = $('select#ano').val();
     $('#tabela .ranking').remove();
     if (typeof heatmap != "undefined") {
         heatmap.setMap(null);
     }
     $.ajax({
-      url: '/query/top/50',
+      url: '/query/top/50?ano=' + ano,
       type: 'GET',
       success: function(data) {
         results = $.parseJSON(data);
         $.each(results['top'], function(i, item) {
-            $('#tabela tr:last').after('<tr class="ranking"><td>' + item.ranking + '</td>'+
-                '<td><a href="#" onclick="marcarNoMapa(\''+ item.via +'\', '+ item.latlng.replace(';', ', ') +')">' + item.via + '</a></td>'+'</tr>');
+            $('#tabela tr:last').after(
+                '<tr class="ranking">'+
+                    '<td><a href="#" onclick="marcarNoMapa(\''+ item.via +'\', '+ item.latlng.replace(';', ', ') +')">' + item.via + '</a></td>'+
+                    '<td class="contagem">' + item.ranking + '</td>'+
+                '</tr>'
+            );
         });
         var heatmap_locations = [];
         $.each(results['coordenadas'], function(i, item) {
@@ -34,7 +39,7 @@ function carregaTabela() {
         });
         heatmap = new google.maps.visualization.HeatmapLayer({
             data: heatmap_locations,
-            radius: 10,
+            /*radius: 10,*/
             map: map
         });
       },

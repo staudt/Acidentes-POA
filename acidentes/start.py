@@ -3,7 +3,7 @@
 # pylint: disable=C0301
 
 from acidentes import __version__, log
-from flask import render_template
+from flask import request, render_template
 from flask import Flask
 import sqlite3
 import json
@@ -20,13 +20,17 @@ def rows_to_dict(rows):
 @app.route("/query/top/<int:count>")
 def top(count):
     cur = sqlite3.connect('dados.db')
-    query_top_vias = "SELECT COUNT(via) AS ranking, via, latlng FROM acidentes WHERE ano=2014 GROUP BY via ORDER BY ranking DESC LIMIT %s" % count
+
+    where = 'ano=%s' % request.args.get('ano')
+    query_top_vias = "SELECT COUNT(via) AS ranking, via, latlng FROM acidentes WHERE %s GROUP BY via ORDER BY ranking DESC LIMIT %s" % (where, count)
     top_vias = rows_to_dict(cur.execute(query_top_vias))
     
-    where_vias_para_coordenadas = ", ".join([("'%s'" % v['via']) for v in top_vias])
-    query_coordenadas = "SELECT latlng FROM acidentes WHERE ano=2014 AND via IN (%s) LIMIT 8000" % where_vias_para_coordenadas
+    vias_para_coordenadas = ", ".join([("'%s'" % v['via']) for v in top_vias])
+    query_coordenadas = "SELECT latlng FROM acidentes WHERE %s AND via IN (%s) LIMIT 8000" % (where, vias_para_coordenadas)
     coordenadas = [value[-1] for value in cur.execute(query_coordenadas).fetchall()]
+
     cur.close()
+
     return json.dumps({'top': top_vias, 'coordenadas': coordenadas})
     
 @app.route("/")
