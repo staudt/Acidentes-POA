@@ -29,15 +29,23 @@ function carregaTabela() {
         var heatmap_locations = [];
         $.each(results['coordenadas'], function(i, item) {
             heatmap_locations.push(
+<<<<<<< Updated upstream
                 new google.maps.LatLng(
                     parseFloat(item.split(';')[0]),
                     parseFloat(item.split(';')[1])
                 )
+=======
+                new google.maps.LatLng(parseFloat(item.split(';')[0]), parseFloat(item.split(';')[1]))
+>>>>>>> Stashed changes
             );
         });
         heatmap = new google.maps.visualization.HeatmapLayer({
             data: heatmap_locations,
+<<<<<<< Updated upstream
             radius: 10,
+=======
+            radius: 12,
+>>>>>>> Stashed changes
             map: map
         });
       },
