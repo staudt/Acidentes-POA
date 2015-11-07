@@ -11,7 +11,7 @@
             center: {lat: -30.1008231, lng: -51.1589488},
             zoom: 11
         });
-        google.maps.event.addListener(map, 'tilesloaded', function() {
+        google.maps.event.addListenerOnce(map, 'tilesloaded', function() {
             carregaTabela();
         });
         $('#busca').change(function () {

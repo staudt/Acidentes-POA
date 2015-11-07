@@ -23,9 +23,9 @@ def top(count):
     query_top_vias = "SELECT COUNT(via) AS ranking, via, latlng FROM acidentes WHERE ano=2014 AND moto=1 GROUP BY via ORDER BY ranking DESC LIMIT %s" % count
     top_vias = rows_to_dict(cur.execute(query_top_vias))
     
-    where_vias_para_coordenadas = ' or '.join([("via='%s'" % v['via']) for v in top_vias])
-    query_coordenadas = "SELECT latlng FROM acidentes WHERE ano=2014 AND moto=1 AND (%s) LIMIT 3000" % where_vias_para_coordenadas
-    coordenadas = [value[-1] for value in cur.execute(query_coordenadas).fetchall()]
+    where_vias_para_coordenadas = ", ".join([("'%s'" % v['via']) for v in top_vias])
+    query_coordenadas = "SELECT count(latlng) as weight, latlng FROM acidentes WHERE ano=2014 AND moto=1 AND via IN (%s) GROUP BY latlng ORDER BY weight DESC LIMIT 8000" % where_vias_para_coordenadas
+    coordenadas = ['%s;%s' % (value) for value in cur.execute(query_coordenadas).fetchall()]
     cur.close()
     return json.dumps({'top': top_vias, 'coordenadas': coordenadas})
     

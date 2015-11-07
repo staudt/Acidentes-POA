@@ -1,3 +1,4 @@
+
 var map, heatmap, marcador;
 
 function marcarNoMapa(via, latitude, longitude) {
@@ -24,20 +25,18 @@ function carregaTabela() {
         results = $.parseJSON(data);
         $.each(results['top'], function(i, item) {
             $('#tabela tr:last').after('<tr class="ranking"><td>' + item.ranking + '</td>'+
-                '<td><a href="#" onclick="marcarNoMapa(\''+ item.via +'\', '+ item.latlng.replace(';', ', ') +')">' + item.via + '</a></td>'+'</tr>');
+                '<td><a href="#" onclick="marcarNoMapa(\''+ item.via +'\', '+ item.latlng.split(';')[0] +', '+ item.latlng.split(';')[1] +')">' + item.via + '</a></td>'+'</tr>');
         });
         var heatmap_locations = [];
         $.each(results['coordenadas'], function(i, item) {
-            heatmap_locations.push(
-                new google.maps.LatLng(
-                    parseFloat(item.split(';')[0]),
-                    parseFloat(item.split(';')[1])
-                )
-            );
+            heatmap_locations.push({
+                location: new google.maps.LatLng(parseFloat(item.split(';')[1]), parseFloat(item.split(';')[2])),
+                weight: item.split(';')[0]
+            });
         });
         heatmap = new google.maps.visualization.HeatmapLayer({
             data: heatmap_locations,
-            radius: 10,
+            radius: 15,
             map: map
         });
       },
