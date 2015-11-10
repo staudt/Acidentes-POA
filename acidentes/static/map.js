@@ -55,19 +55,35 @@ function carregaTabela() {
       type: 'GET',
       success: function(data) {
         results = $.parseJSON(data);
+        var via_ranking = {},
+            via_latlng = {},
+            total = 0;
         $.each(results['top'], function(i, item) {
+            total += item.ranking;
+            via_ranking[item.via] = parseInt(item.ranking);
+            via_latlng[item.via] = item.latlng.replace(';', ', ');
+        });
+        $.each(via_ranking, function (via, ranking) {
             $('#tabela tr:last').after(
                 '<tr class="ranking">'+
-                    '<td><a href="#" onclick="marcarNoMapa(\''+ item.via +'\', '+ item.latlng.replace(';', ', ') +')">' + item.via + '</a></td>'+
-                    '<td class="contagem">' + item.ranking + '</td>'+
+                    '<td><a href="#" onclick="marcarNoMapa(\''+ via +'\', '+ via_latlng[via] +')">' + via + '</a></td>'+
+                    '<td class="contagem">' + ranking + '</td>'+
+                    '<td class="percent">' + ((ranking/total)*100).toFixed(2) + '</td>'+
                 '</tr>'
             );
-        });
+        });            
         var heatmap_locations = [];
         $.each(results['coordenadas'], function(i, item) {
-            heatmap_locations.push(
-                new google.maps.LatLng(parseFloat(item.split(';')[0]), parseFloat(item.split(';')[1]))
-            );
+            var ranking = $('select#ranking').val();
+            var items = item.split(';'),
+                lat = parseFloat(items[0]),
+                lg = parseFloat(items[1]),
+                via = items[2],
+                value = via_ranking[via];
+            heatmap_locations.push({
+                location : new google.maps.LatLng(lat, lg),
+                weight: value /*Change to 1 if needed*/
+            });
         });
         heatmap = new google.maps.visualization.HeatmapLayer({
             data: heatmap_locations,

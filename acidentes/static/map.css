@@ -38,6 +38,9 @@ td, th {
 .contagem {
 	text-align: right;
 }
+.percent {
+	text-align: right;
+}
 #map {
     width: 100%; 
     height: 100%;

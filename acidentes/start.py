@@ -36,12 +36,14 @@ def top(count):
 
     where = ' AND '.join(query)
     query_top_vias = "SELECT %s AS ranking, via, latlng FROM acidentes WHERE %s GROUP BY via HAVING ranking>0 ORDER BY ranking DESC LIMIT %s" % (ranking, where, count)
-
+    print query_top_vias
+    
     cur = sqlite3.connect('dados.db')
     top_vias = rows_to_dict(cur.execute(query_top_vias))
     
     vias_para_coordenadas = ", ".join([("'%s'" % v['via']) for v in top_vias])
-    query_coordenadas = "SELECT latlng FROM acidentes WHERE %s AND via IN (%s) LIMIT 8000" % (where, vias_para_coordenadas)
+    query_coordenadas = "SELECT latlng || ';' || via FROM acidentes WHERE %s AND via IN (%s)" % (where, vias_para_coordenadas)
+    print query_coordenadas
     coordenadas = [value[-1] for value in cur.execute(query_coordenadas).fetchall()]
     
     cur.close()
