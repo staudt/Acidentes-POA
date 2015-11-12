@@ -1,5 +1,8 @@
 # Acidentes-POA
-Visualização de métricas de acidentes de trânsito em Porto Alegre
+Porto Alegre Traffic Accidents metrics visualization
+
+Data:
+> Taken from http://www.datapoa.com.br/dataset/acidentes-de-transito
 
 Requirements:
 > Python (download & install: https://www.python.org/downloads/)

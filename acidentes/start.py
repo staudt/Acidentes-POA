@@ -13,47 +13,64 @@ import sys
 
 app = Flask(__name__)
 
+DATABASE = 'dados.db'
 
 def rows_to_dict(rows):
     return [dict((rows.description[i][0], value) \
                for i, value in enumerate(row)) for row in rows.fetchall()]
 
+def get_where(request_args, ano, via = None):
+    query = ['ano=' + ano]
+    if request_args.get('tipo_acid'): query.append("tipo_acid='%s'" % request_args.get('tipo_acid'))
+    if request_args.get('mes'): query.append("mes='%s'" % request_args.get('mes'))
+    if request_args.get('dia_sem'): query.append("dia_sem='%s'" % request_args.get('dia_sem'))
+    if request_args.get('auto'): query.append("auto>0")
+    if request_args.get('moto'): query.append("moto>0")
+    if request_args.get('taxi'): query.append("taxi>0")
+    if request_args.get('lotacao'): query.append("lotacao>0")
+    if request_args.get('onibus'): query.append("onibus>0")
+    if request_args.get('caminhao'): query.append("caminhao>0")
+    if request_args.get('bicicleta'): query.append("bicicleta>0")
+    if via: query.append("via='"+via+"'")
+    where = ' AND '.join(query)
+    return where
 
+def get_top_vias(request_args, cur, where, count):
+    ranking = 'COUNT(via)' if not request_args.get('ranking') else 'SUM(%s)' % request_args.get('ranking')    
+    query_top_vias = "SELECT %s AS ranking, via, latlng FROM acidentes WHERE %s GROUP BY via HAVING ranking>0 ORDER BY ranking DESC LIMIT %s" % (ranking, where, count)
+    top_vias = rows_to_dict(cur.execute(query_top_vias))
+    return top_vias
+    
+@app.route("/query/via/<v>/<int:count>")
+def via(v,count):
+    cur = sqlite3.connect(DATABASE)
+    years = ["2001","2002","2003","2004","2005","2006","2007","2008","2009","2010","2011","2012","2013","2014",]
+    data = {}
+    for y in years:
+        where = get_where(request.args, y, v)
+        top_vias = get_top_vias(request.args, cur, where, count)
+        data[y] = top_vias    
+    cur.close()
+    return json.dumps(data)
+    
 @app.route("/query/top/<int:count>")
 def top(count):
-    query = ['ano=' + request.args.get('ano') if request.args.get('ano') else '2014']
-    if request.args.get('tipo_acid'): query.append("tipo_acid='%s'" % request.args.get('tipo_acid'))
-    if request.args.get('mes'): query.append("mes='%s'" % request.args.get('mes'))
-    if request.args.get('dia_sem'): query.append("dia_sem='%s'" % request.args.get('dia_sem'))
-    if request.args.get('auto'): query.append("auto=1")
-    if request.args.get('moto'): query.append("moto=1")
-    if request.args.get('taxi'): query.append("taxi=1")
-    if request.args.get('lotacao'): query.append("lotacao=1")
-    if request.args.get('onibus'): query.append("onibus=1")
-    if request.args.get('caminhao'): query.append("caminhao=1")
-    if request.args.get('bicicleta'): query.append("bicicleta=1")
-    ranking = 'COUNT(via)' if not request.args.get('ranking') else 'SUM(%s)' % request.args.get('ranking')
-
-    where = ' AND '.join(query)
-    query_top_vias = "SELECT %s AS ranking, via, latlng FROM acidentes WHERE %s GROUP BY via HAVING ranking>0 ORDER BY ranking DESC LIMIT %s" % (ranking, where, count)
-    print query_top_vias
+    cur = sqlite3.connect(DATABASE)
+    ano = request.args.get('ano') if request.args.get('ano') else '2014'
+    where = get_where(request.args, ano)
     
-    cur = sqlite3.connect('dados.db')
-    top_vias = rows_to_dict(cur.execute(query_top_vias))
+    top_vias = get_top_vias(request.args, cur, where, count)
     
     vias_para_coordenadas = ", ".join([("'%s'" % v['via']) for v in top_vias])
     query_coordenadas = "SELECT latlng || ';' || via FROM acidentes WHERE %s AND via IN (%s)" % (where, vias_para_coordenadas)
-    print query_coordenadas
     coordenadas = [value[-1] for value in cur.execute(query_coordenadas).fetchall()]
     
     cur.close()
-    return json.dumps({'top': top_vias, 'coordenadas': coordenadas})
-   
+    return json.dumps({'top': top_vias, 'coordenadas': coordenadas})   
 
 @app.route("/")
 def tabela():
     return render_template('mapa.html')
-
 
 def main():
     if not os.path.exists('dados.db'):

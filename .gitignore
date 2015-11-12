@@ -61,3 +61,4 @@ target/
 
 # ignora os arquivos .csv em dados pra economizar espaço
 dados/*.csv
+*.db

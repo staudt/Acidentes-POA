@@ -7,21 +7,37 @@ body, td, th {
     font-family: arial,sans-serif;
     font-size: 12px;
 }
-
+#linechart {
+    background-color: #fff;
+    position: absolute;
+    left: 0px;
+    top: 44px;
+    margin: 8px 0px 8px 10px;
+    width: 280px;
+    height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 10;
+    padding: 8px;
+    border: 1px solid #e0e0e0;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+    box-shadow: rgba(0, 0, 0, 0.298039) 0px 1px 4px -1px;
+}
 #tabela_voadora  {
-	background-color: #fff;
-	position: absolute;
-	left: 0px;
-	top: 44px;
-	margin: 8px 0px 8px 10px;
-	width: 280px;
-	height: 500px;
-	overflow-y: auto;
-	overflow-x: hidden;
-	z-index: 10;
-	padding: 8px;
-	border: 1px solid #e0e0e0;
-	border-bottom-left-radius: 2px;
+    background-color: #fff;
+    position: absolute;
+    left: 0px;
+    top: 44px;
+    margin: 8px 0px 8px 10px;
+    width: 280px;
+    height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 10;
+    padding: 8px;
+    border: 1px solid #e0e0e0;
+    border-bottom-left-radius: 2px;
     border-bottom-right-radius: 2px;
     box-shadow: rgba(0, 0, 0, 0.298039) 0px 1px 4px -1px;
 }

@@ -58,6 +58,7 @@ if __name__ == "__main__":
             with open('%s/dados/%s' % (os.getcwd(), filename), 'r') as f:
                 content = f.read().splitlines()
                 headers = str(content[0]).split(';')
+                print "len(headers) = " + str(len(headers))
                 data = []
                 for row_content in content[1:]:
                     row = row_content.split(';')
