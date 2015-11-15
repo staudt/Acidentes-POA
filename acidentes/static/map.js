@@ -1,5 +1,7 @@
 var map, heatmap, marcador, interval_id, via_ranking, infowindow;
 
+google.load('visualization', '1', {packages: ['corechart', 'line']});
+
 $(function() {
     map = new google.maps.Map(document.getElementById('map'), {
         center: {lat: -30.081143, lng: -51.185737},
@@ -19,7 +21,7 @@ $(function() {
     });
 });
 
-function montaUrl(endpoint, via) {
+function montaUrl(endpoint) {
     var query = [
         'ano=' + $('select#ano').val(),
         'ranking=' + $('select#ranking').val(),
@@ -37,9 +39,6 @@ function montaUrl(endpoint, via) {
     if (endpoint == "top") {
         return '/query/top/50?' + query.join('&');
     }
-    else if (endpoint == "via") {
-        return '/query/via/' + via + '/50?' + query.join('&');
-    }
     else {
         return '/';
     }
@@ -48,12 +47,12 @@ function montaUrl(endpoint, via) {
 function loadsLineChart(via) {
     $('#linechart').remove();
     $.ajax({
-      url: montaUrl("via", via),
+      url: '/query/via/' + via,
       type: 'GET',
       success: function(data) {
         results = $.parseJSON(data);
         $('#linechart').append('<p>' + results + '</p>')
-        /*Greice/Elisa logic here*/
+        console.log(results);
       },
       error : function(data) {
         /*Greice/Elisa logic here*/
@@ -65,13 +64,6 @@ function marcarNoMapa(via) {
     if (typeof marcador != "undefined") {
         marcador.setMap(null);
     }
-    var contentString = '<div id="content"' +
-        '<p><b>Contagem:</b> ' + via_ranking[via]["ranking"] + '</p>' +
-        '<p><b>Porcentagem:</b> ' + via_ranking[via]["perc"] + '</p>' +
-        '</div>'
-    infowindow = new google.maps.InfoWindow({
-        content: contentString
-    });
     var geo = via_ranking[via]["latlang"].split(";"),
         latitude = parseFloat(geo[0]),
         longitude = parseFloat(geo[1]);
@@ -80,6 +72,15 @@ function marcarNoMapa(via) {
         map: map,
         title: via
     });
+    var contentString = '<div id="content"' +
+        '<p><b>Contagem:</b> ' + via_ranking[via]["ranking"] + '</p>' +
+        '<p><b>Porcentagem:</b> ' + via_ranking[via]["perc"] + '</p>' +
+        '</div>'
+    infowindow = new google.maps.InfoWindow({
+        content: contentString
+    });
+    infowindow.open(map, marcador);
+    map.panTo({lat: latitude, lng: longitude});
     marcador.addListener('click', function() {
         if (infowindow) {
             infowindow.close();
@@ -87,7 +88,6 @@ function marcarNoMapa(via) {
         loadsLineChart(via);
         infowindow.open(map, marcador);
     });
-    map.panTo({lat: latitude, lng: longitude});
 }
 
 function loading(){
@@ -133,7 +133,23 @@ function carregaTabela() {
                     '<td class="percent">' + dict['perc'] + '</td>'+
                 '</tr>'
             );
-        }); 
+        });
+
+        var data = google.visualization.arrayToDataTable([
+          ['Ano', 'Contagem'],
+          ['2004',  1000],
+          ['2005',  1170],
+          ['2006',  660],
+          ['2007',  1030]
+        ]);
+        var options = {
+          'legend': 'none',
+
+        };
+        var chart = new google.visualization.LineChart(document.getElementById('grafico'));
+        chart.draw(data, options);
+
+
         var heatmap_locations = [];
         $.each(results['coordenadas'], function(i, item) {
             var ranking = $('select#ranking').val();
