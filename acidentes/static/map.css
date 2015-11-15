@@ -7,6 +7,9 @@ body, td, th {
     font-family: arial,sans-serif;
     font-size: 12px;
 }
+a, a:visited {
+    color: #0B0080;
+}
 #linechart {
     background-color: #fff;
     position: absolute;

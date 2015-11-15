@@ -66,8 +66,8 @@ function marcarNoMapa(via) {
         marcador.setMap(null);
     }
     var contentString = '<div id="content"' +
-        '<p><b>Contagem:</b>' + via_ranking[via]["ranking"] + '</p>' +
-        '<p><b>Percent:</b>' + via_ranking[via]["perc"] + '</p>' +
+        '<p><b>Contagem:</b> ' + via_ranking[via]["ranking"] + '</p>' +
+        '<p><b>Porcentagem:</b> ' + via_ranking[via]["perc"] + '</p>' +
         '</div>'
     infowindow = new google.maps.InfoWindow({
         content: contentString
@@ -93,19 +93,18 @@ function marcarNoMapa(via) {
 function loading(){
     if (interval_id) return interval_id;
     $('#tabela .ranking').remove();
-    $('#tabela tr:last').after('<tr class="ranking loading"><td colspan="4"></td></tr>');
-    i = 0;
-    interval_id = setInterval(function() {
-      i = ++i % 4;
-      $(".loading").text("Loading " + Array(i+1).join("."));
-    }, 800);
+    $('#tabela tr:last').after('<tr class="ranking loading"><td colspan="4"><center><img src="static/loading.gif"/></center></td></tr>');
     return interval_id;
 }
 
 function carregaTabela() {
+    interval_id = loading();
     if (typeof heatmap != "undefined") {
         heatmap.setMap(null);
     }
+    if (typeof marcador != "undefined") {
+        marcador.setMap(null);
+    }    
     $('#linechart').remove();
     $.ajax({
       url: montaUrl("top", ""),
