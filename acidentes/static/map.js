@@ -45,7 +45,7 @@ function montaUrl(endpoint) {
 function loadsLineChart(via, count) {
     $('#linechart').remove();
     $.ajax({
-      url: '/query/via/' + via,
+      url: '/query/via/' + via + '?ranking=' + $('select#ranking').val(),
       type: 'GET',
       success: function(data) {
         results = $.parseJSON(data);

@@ -46,7 +46,8 @@ def via(via):
     """Retorna a contagem de acidentes de 2000 a 2014"""
     cur = sqlite3.connect(DATABASE)
     anos = ','.join(["2000", "2001","2002","2003","2004","2005","2006","2007","2008","2009","2010","2011","2012","2013","2014"])
-    data = [value[-1] for value in cur.execute("SELECT ano, COUNT(ano) AS contagem FROM acidentes WHERE ano IN(%s) and via='%s' GROUP BY ano" % (anos, via)).fetchall()]
+    ranking = 'COUNT(via)' if not request.args.get('ranking') else 'SUM(%s)' % request.args.get('ranking')    
+    data = [value[-1] for value in cur.execute("SELECT %s FROM acidentes WHERE ano IN(%s) and via='%s' GROUP BY ano" % (ranking, anos, via)).fetchall()]
     cur.close()
     return json.dumps(data)
     
