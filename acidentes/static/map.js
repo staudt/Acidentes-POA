@@ -1,7 +1,5 @@
 var map, heatmap, marcador, interval_id, via_ranking, infowindow;
 
-google.load('visualization', '1', {packages: ['corechart', 'line']});
-
 $(function() {
     map = new google.maps.Map(document.getElementById('map'), {
         center: {lat: -30.081143, lng: -51.185737},
@@ -44,18 +42,26 @@ function montaUrl(endpoint) {
     }
 }
 
-function loadsLineChart(via) {
+function loadsLineChart(via, count) {
     $('#linechart').remove();
     $.ajax({
       url: '/query/via/' + via,
       type: 'GET',
       success: function(data) {
         results = $.parseJSON(data);
-        $('#linechart').append('<p>' + results + '</p>')
-        console.log(results);
+        $('#grafico_via').html('').sparkline(results, {
+            type: 'line',
+            width: '100%',
+            height: '30',
+            fillColor: undefined,
+            chartRangeMin: 0,
+            normalRangeMin: 0,
+            normalRangeMax: count,
+            drawNormalOnTop: true
+        });
       },
       error : function(data) {
-        /*Greice/Elisa logic here*/
+        $('#grafico_via').html('Não foi possivel extrair dados da via');
       }
     });
 }
@@ -72,20 +78,16 @@ function marcarNoMapa(via) {
         map: map,
         title: via
     });
-    var contentString = '<div id="content"' +
-        '<p><b>Contagem:</b> ' + via_ranking[via]["ranking"] + '</p>' +
-        '<p><b>Porcentagem:</b> ' + via_ranking[via]["perc"] + '</p>' +
-        '</div>'
-    infowindow = new google.maps.InfoWindow({
-        content: contentString
-    });
+    var contentString = '<div>' +
+        '<center><b>'+ via +'</b></center><br/>' +
+        'Contagem: <b>' + via_ranking[via]["ranking"] + '</b> (' + via_ranking[via]["perc"] + '%)' +
+        '<br/><br/>Histórico Anual:<br/><div id="grafico_via"><center><img src="static/loading.gif"/></center></div>'
+      '</div>'
+    infowindow = new google.maps.InfoWindow({ content: contentString });
+    loadsLineChart(via, via_ranking[via]["ranking"]);
     infowindow.open(map, marcador);
     map.panTo({lat: latitude, lng: longitude});
     marcador.addListener('click', function() {
-        if (infowindow) {
-            infowindow.close();
-        }
-        loadsLineChart(via);
         infowindow.open(map, marcador);
     });
 }
@@ -134,21 +136,6 @@ function carregaTabela() {
                 '</tr>'
             );
         });
-
-        var data = google.visualization.arrayToDataTable([
-          ['Ano', 'Contagem'],
-          ['2004',  1000],
-          ['2005',  1170],
-          ['2006',  660],
-          ['2007',  1030]
-        ]);
-        var options = {
-          'legend': 'none',
-
-        };
-        var chart = new google.visualization.LineChart(document.getElementById('grafico'));
-        chart.draw(data, options);
-
 
         var heatmap_locations = [];
         $.each(results['coordenadas'], function(i, item) {

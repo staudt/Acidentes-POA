@@ -41,12 +41,12 @@ def get_top_vias(request_args, cur, where, count):
     top_vias = rows_to_dict(cur.execute(query_top_vias))
     return top_vias
     
-@app.route("/query/via/<v>")
-def via(v):
+@app.route("/query/via/<via>")
+def via(via):
     """Retorna a contagem de acidentes de 2000 a 2014"""
     cur = sqlite3.connect(DATABASE)
     anos = ','.join(["2000", "2001","2002","2003","2004","2005","2006","2007","2008","2009","2010","2011","2012","2013","2014"])
-    data = [value[-1] for value in cur.execute("SELECT ano, COUNT(ano) AS contagem FROM acidentes WHERE ano IN(%s) and via='%s' GROUP BY ano" % (anos, v)).fetchall()]
+    data = [value[-1] for value in cur.execute("SELECT ano, COUNT(ano) AS contagem FROM acidentes WHERE ano IN(%s) and via='%s' GROUP BY ano" % (anos, via)).fetchall()]
     cur.close()
     return json.dumps(data)
     
@@ -63,7 +63,7 @@ def top(count):
     coordenadas = [value[-1] for value in cur.execute(query_coordenadas).fetchall()]
     
     cur.close()
-    return json.dumps({'top': top_vias, 'coordenadas': coordenadas})   
+    return json.dumps({'top': top_vias, 'coordenadas': coordenadas})
 
 @app.route("/")
 def tabela():
